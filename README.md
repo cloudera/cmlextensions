@@ -31,7 +31,7 @@ use the following Python code:
 ```
 
 ### Workers_v2
-The cml (or legacy cdsw) library has a workers module already. The v2 module is experimenting with a new management interface for the CML Workers infrastructure. The v2 module has more defaults and 
+The cml (or legacy cdsw) library has a workers module already. The v2 module is experimenting with a new management interface for the CML Workers infrastructure. The v2 module has more defaults and a more OOP approach for managing groups of workers. 
 
 Example usage:
 ```
