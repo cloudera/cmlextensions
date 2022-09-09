@@ -31,7 +31,7 @@ use the following Python code:
 ```
 
 ### Workers_v2
-The cml (or legacy cdsw) library has a workers module already. The v2 module is experimenting with a new management interface for the CML Workers infrastructure. The v2 module has more defaults and a more OOP approach for managing groups of workers. 
+The cml (or legacy cdsw) library has a workers module already. The v2 module is experimenting with a new management interface for the CML Workers infrastructure. The v2 module has more defaults and a more OOP approach for managing groups of workers. There is no added functionality, the v2 library relies on the functionality available in the orignal version. 
 
 Example usage:
 ```
@@ -40,13 +40,13 @@ Example usage:
 
 > wg1 = WorkerGroup(1, code="import time;time.sleep(300)")
 > wg1.get_workers()
-	id	status	created_at	running_at	finished_at	duration	ip_address
-0	221pa78rmzau93zf	running	2022-09-09T12:02:14.031Z	2022-09-09T12:02:27.945Z	None	1	100.100.209.35
+id	status	created_at	running_at	finished_at	duration	ip_address
+221pa78rmzau93zf	running	2022-09-09T12:02:14.031Z	2022-09-09T12:02:27.945Z	None	1	100.100.209.35
 
 > workers.get_workers(active=True)
 id	status	created_at	running_at	finished_at	duration	ip_address
-0	221pa78rmzau93zf	running	2022-09-09T12:02:14.031Z	2022-09-09T12:02:27.945Z	None	7	100.100.209.35
-1	6tyvg0kuu0wrlcyl	running	2022-09-09T12:01:50.282Z	2022-09-09T12:02:04.387Z	None	30	100.100.127.80
+221pa78rmzau93zf	running	2022-09-09T12:02:14.031Z	2022-09-09T12:02:27.945Z	None	7	100.100.209.35
+6tyvg0kuu0wrlcyl	running	2022-09-09T12:01:50.282Z	2022-09-09T12:02:04.387Z	None	30	100.100.127.80
 
 > wg1.stop_workers()
 ```
