@@ -1,3 +1,15 @@
+# Copyright 2022 Cloudera. All Rights Reserved.
+#
+# This file is licensed under the Apache License Version 2.0
+# (the "License"). You may not use this file except in compliance
+# with the License. You may obtain  a copy of the License at
+# http://www.apache.org/licenses/LICENSE-2.0.
+#
+# This file is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES
+# OR CONDITIONS OF ANY KIND, either express or implied. Refer to the
+# License for the specific permissions and limitations governing your
+# use of the file.
+
 import os
 import cdsw
 
@@ -13,7 +25,7 @@ class RayCluster():
         self.head_cpu = head_cpu
         self.head_memory = head_memory
         self.dashboard_port = dashboard_port
-        
+
         self.ray_head_details = None
         self.ray_worker_details = None
 
@@ -29,8 +41,8 @@ class RayCluster():
         )
 
         self.ray_head_details = cdsw.await_workers(
-          ray_head, 
-          wait_for_completion=False, 
+          ray_head,
+          wait_for_completion=False,
           timeout_seconds=90
         )
 
@@ -38,19 +50,19 @@ class RayCluster():
         # We need to start the ray process with --block else the command completes and the CML Worker terminates
         worker_start_cmd = f"!ray start --block --address={head_addr}"
         ray_workers = cdsw.launch_workers(
-            n=self.num_workers, 
-            cpu=self.worker_cpu, 
-            memory=self.worker_memory, 
+            n=self.num_workers,
+            cpu=self.worker_cpu,
+            memory=self.worker_memory,
             code=worker_start_cmd,
         )
 
         self.ray_worker_details = cdsw.await_workers(
-            ray_workers, 
+            ray_workers,
             wait_for_completion=False)
 
     def init(self):
         """
-        Creates a Ray Cluster on the CML Workers infrastructure.  
+        Creates a Ray Cluster on the CML Workers infrastructure.
         """
         try:
             import ray  # pylint: disable=unused-import
@@ -60,24 +72,24 @@ class RayCluster():
                 + str(error)
             ) from error
 
-        # Start the ray head process 
+        # Start the ray head process
         self._start_ray_head()
 
         ray_head_ip = self.ray_head_details['workers'][0]['ip_address']
         ray_head_addr = ray_head_ip + ':6379'
-        
+
         self._add_ray_workers(ray_head_addr)
-        
+
         #TODO: could add cluster details, e.g., worker count and resources
         print(f"""
 --------------------
 Ray cluster started
 --------------------
 
-The Ray dashboard is running at 
+The Ray dashboard is running at
 {self.get_dashboard_url()}
 
-To connect to this Ray cluster from this CML Session, 
+To connect to this Ray cluster from this CML Session,
 use the following Python code:
   import ray
   ray.init(address='{self.get_client_url()}')
@@ -94,16 +106,16 @@ use the following Python code:
 
     def get_client_url(self):
         ray_head_ip = self.ray_head_details['workers'][0]['ip_address']
-        return f"ray://{ray_head_ip}:10001" 
-    
+        return f"ray://{ray_head_ip}:10001"
+
     def terminate(self):
         """
         Terminates the Ray Cluster.
         """
-        
+
         #TODO: stop workers only when they were created for this Ray Cluster
         cdsw.stop_workers()
-        
+
         # Reset instance state
         self.ray_head_ip = None
         self.ray_head_addr = None
