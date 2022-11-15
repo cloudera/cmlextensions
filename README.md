@@ -9,7 +9,7 @@ This library can be installed directly from GitHub:
 ## Modules
 
 ### Ray
-Ray is a unified framework for scaling AI and Python applications. We can create a cluster on CML infrastructure to scale out Ray processes. This `cmlextras.ray_cluster` module abstracts the ray cluster provisioning and operations so users can focus on their application code instead of infrastructure management. 
+Ray is a unified framework for scaling AI and Python applications. We can create a cluster on CML infrastructure to scale out Ray processes. This `cmlextras.ray_cluster` module abstracts the ray cluster provisioning and operations so users can focus on their application code instead of infrastructure management.
 
 Example usage:
 ```
@@ -20,10 +20,10 @@ Example usage:
 Ray cluster started
 --------------------
 
-The Ray dashboard is running at 
+The Ray dashboard is running at
 https://024d0wpuw0eain8r.ml-4c5feac0-3ec.go01-dem.ylcu-atmi.cloudera.site/
 
-To connect to this Ray cluster from this CML Session, 
+To connect to this Ray cluster from this CML Session,
 use the following Python code:
   import ray
   ray.init(address='ray://100.100.127.74:10001')
@@ -31,7 +31,7 @@ use the following Python code:
 ```
 
 ### Workers_v2
-The cml (or legacy cdsw) library has a workers module already. The v2 module is experimenting with a new management interface for the CML Workers infrastructure. The v2 module has more defaults and a more OOP approach for managing groups of workers. There is no added functionality, the v2 library relies on the functionality available in the orignal version. 
+The cml (or legacy cdsw) library has a workers module already. The v2 module is experimenting with a new management interface for the CML Workers infrastructure. The v2 module has more defaults and a more OOP approach for managing groups of workers. There is no added functionality, the v2 library relies on the functionality available in the orignal version.
 
 Example usage:
 ```
@@ -50,8 +50,3 @@ id	status	created_at	running_at	finished_at	duration	ip_address
 
 > wg1.stop_workers()
 ```
-
-
-## Contribute 
-We welcome (and encourage!) all forms of contributions, including patches and PRs, reporting issues, submitting feature requests, and any feedback. 
-
