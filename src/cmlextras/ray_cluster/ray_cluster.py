@@ -32,13 +32,19 @@ class RayCluster():
 
     def _start_ray_head(self):
         # We need to start the ray process with --block else the command completes and the CML Worker terminates
-        head_start_cmd = f"!ray start --head --block --include-dashboard=true --dashboard-port={self.dashboard_port}"
-        ray_head = cdsw.launch_workers(
-            n=1,
-            cpu=self.head_cpu,
-            memory=self.head_memory,
-            code=head_start_cmd,
-        )
+        head_start_cmd = f"!ray start --head --block --disable-usage-stats --include-dashboard=true --dashboard-port={self.dashboard_port}"
+
+        args = {
+            'n': 1,
+            'cpu': self.head_cpu,
+            'memory': self.head_memory,
+            'code': head_start_cmd,
+        }
+
+        if hasattr(cdsw.launch_workers, 'name'):
+            args['name'] = 'Ray Head'
+
+        ray_head = cdsw.launch_workers(**args)
 
         self.ray_head_details = cdsw.await_workers(
           ray_head,
@@ -49,12 +55,18 @@ class RayCluster():
     def _add_ray_workers(self, head_addr):
         # We need to start the ray process with --block else the command completes and the CML Worker terminates
         worker_start_cmd = f"!ray start --block --address={head_addr}"
-        ray_workers = cdsw.launch_workers(
-            n=self.num_workers,
-            cpu=self.worker_cpu,
-            memory=self.worker_memory,
-            code=worker_start_cmd,
-        )
+
+        args = {
+            'n': self.num_workers,
+            'cpu': self.worker_cpu,
+            'memory': self.worker_memory,
+            'code': worker_start_cmd,
+        }
+
+        if hasattr(cdsw.launch_workers, 'name'):
+            args['name'] = 'Ray Worker'
+
+        ray_workers = cdsw.launch_workers(**args)
 
         self.ray_worker_details = cdsw.await_workers(
             ray_workers,

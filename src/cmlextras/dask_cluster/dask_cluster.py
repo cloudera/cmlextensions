@@ -39,14 +39,19 @@ class DaskCluster:
         self.dask_worker_details = None
 
     def _start_dask_scheduler(self):
-
         dask_scheduler_cmd = f"!dask scheduler --host 0.0.0.0 --dashboard-address 127.0.0.1:{self.dashboard_port}"
-        dask_scheduler = cdsw.launch_workers(
-            n=1,
-            cpu=self.scheduler_cpu,
-            memory=self.scheduler_memory,
-            code=dask_scheduler_cmd,
-        )
+
+        args = {
+            'n': 1,
+            'cpu': self.scheduler_cpu,
+            'memory': self.scheduler_memory,
+            'code': dask_scheduler_cmd,
+        }
+
+        if hasattr(cdsw.launch_workers, 'name'):
+            args['name'] = 'Dask Scheduler'
+
+        dask_scheduler = cdsw.launch_workers(**args)
 
         self.dask_scheduler_details = cdsw.await_workers(
             dask_scheduler, wait_for_completion=False, timeout_seconds=90
@@ -54,12 +59,18 @@ class DaskCluster:
 
     def _add_dask_workers(self, scheduler_addr):
         worker_start_cmd = f"!dask worker {scheduler_addr}"
-        dask_workers = cdsw.launch_workers(
-            n=self.num_workers,
-            cpu=self.worker_cpu,
-            memory=self.worker_memory,
-            code=worker_start_cmd,
-        )
+
+        args = {
+            'n': self.num_workers,
+            'cpu': self.worker_cpu,
+            'memory': self.worker_memory,
+            'code': worker_start_cmd,
+        }
+
+        if hasattr(cdsw.launch_workers, 'name'):
+            args['name'] = 'Dask Worker'
+
+        dask_workers = cdsw.launch_workers(**args)
 
         self.dask_worker_details = cdsw.await_workers(
             dask_workers, wait_for_completion=False
