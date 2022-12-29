@@ -10,29 +10,11 @@
 # License for the specific permissions and limitations governing your
 # use of the file.
 
-# Add cmlextras to the path
-import sys
-sys.path.append('../src')
+from .dask_cluster import *
 
-import ray
-from cmlextras.ray_cluster import RayCluster
-
-c = RayCluster(num_workers=2)
-c.init()
-
-# Connect to the cluster
-ray.init(address=c.get_client_url())
-
-# Define the square task.
-@ray.remote
-def square(x):
-    return x * x
-
-# Launch four parallel square tasks.
-futures = [square.remote(i) for i in range(4)]
-
-# Retrieve results.
-print(ray.get(futures))
-
-# Delete cluster
-c.terminate()
+try:
+    import cdsw
+except ImportError as error:
+    raise ImportError(
+        "Could not import cdsw, for this module to work you need to execute this code in a CML session"
+    )

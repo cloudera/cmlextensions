@@ -31,6 +31,27 @@ use the following Python code:
 
 ```
 
+### Dask
+Dask is a flexible parallel computing library for analytics in Python. We can create a cluster on CML infrastructure to scale out Dask processes. This `cmlextras.dask_cluster` module abstracts the dask cluster provisioning and operations so users can focus on their application code instead of infrastructure management.
+
+Example usage:
+```
+> cluster = DaskCluster(num_workers=2)
+> cluster.init()
+
+--------------------
+Dask cluster started
+--------------------
+
+The Dask dashboard is running at
+https://024d0wpuw0eain8r.ml-4c5feac0-3ec.go01-dem.ylcu-atmi.cloudera.site/
+
+To connect to this Dask cluster from this CML Session,
+use the following Python code:
+  from dask.distributed import Client
+  client = Client('tcp://100.100.225.149:8786')
+```
+
 ### Workers_v2
 The cml (or legacy cdsw) library has a workers module already. The v2 module is experimenting with a new management interface for the CML Workers infrastructure. The v2 module has more defaults and a more OOP approach for managing groups of workers. There is no added functionality, the v2 library relies on the functionality available in the orignal version.
 
