@@ -14,6 +14,8 @@ Ray is a unified framework for scaling AI and Python applications. We can create
 
 Example usage:
 ```
+> from cmlextras.ray_cluster import RayCluster
+
 > cluster = RayCluster(num_workers=2)
 > cluster.init()
 
@@ -36,6 +38,8 @@ Dask is a flexible parallel computing library for analytics in Python. We can cr
 
 Example usage:
 ```
+> from cmlextras.dask_cluster import DaskCluster
+
 > cluster = DaskCluster(num_workers=2)
 > cluster.init()
 
