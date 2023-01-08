@@ -17,7 +17,7 @@ sys.path.append('../src')
 import ray
 from cmlextras.ray_cluster import RayCluster
 
-c = RayCluster(num_workers=2)
+c = RayCluster(num_workers=2, env={'OMP_NUM_THREADS':'2'})
 c.init()
 
 # Connect to the cluster
