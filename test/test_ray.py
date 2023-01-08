@@ -35,4 +35,4 @@ futures = [square.remote(i) for i in range(4)]
 print(ray.get(futures))
 
 # Delete cluster
-# c.terminate()
+c.terminate()

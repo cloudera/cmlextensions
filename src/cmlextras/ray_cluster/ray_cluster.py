@@ -34,7 +34,7 @@ class RayCluster():
 
     def _start_ray_head(self):
         # We need to start the ray process with --block else the command completes and the CML Worker terminates
-        head_start_cmd = f"!env && ray start --head --block --disable-usage-stats --num-cpus={self.head_cpu} --include-dashboard=true --dashboard-port={self.dashboard_port}"
+        head_start_cmd = f"!ray start --head --block --disable-usage-stats --num-cpus={self.head_cpu} --include-dashboard=true --dashboard-port={self.dashboard_port}"
 
         args = {
             'n': 1,
