@@ -1,4 +1,4 @@
-# cmlextras
+# cml-extensions
 
 This python library has added functionality for [Cloudera Machine Learning (CML)](https://docs.cloudera.com/machine-learning/cloud/product/topics/ml-product-overview.html#cdsw_overview)'s cml (or legacy cdsw) library. The library is organized in modules and is built on the [CML Workers API](https://docs.cloudera.com/machine-learning/cloud/distributed-computing/topics/ml-workers-api.html) and other CML functionalities.
 
