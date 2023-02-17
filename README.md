@@ -1,20 +1,20 @@
-# cmlextras
+# cmlextensions
 
 This python library has added functionality for [Cloudera Machine Learning (CML)](https://docs.cloudera.com/machine-learning/cloud/product/topics/ml-product-overview.html#cdsw_overview)'s cml (or legacy cdsw) library. The library is organized in modules and is built on the [CML Workers API](https://docs.cloudera.com/machine-learning/cloud/distributed-computing/topics/ml-workers-api.html) and other CML functionalities.
 
 ## Installation
 This library can be installed directly from GitHub:
 
-```%pip install git+https://github.com/cloudera/cmlextras.git```
+```%pip install git+https://github.com/cloudera/cmlextensions.git```
 
 ## Modules
 
 ### Ray
-Ray is a unified framework for scaling AI and Python applications. We can create a cluster on CML infrastructure to scale out Ray processes. This `cmlextras.ray_cluster` module abstracts the ray cluster provisioning and operations so users can focus on their application code instead of infrastructure management.
+Ray is a unified framework for scaling AI and Python applications. We can create a cluster on CML infrastructure to scale out Ray processes. This `cmlextensions.ray_cluster` module abstracts the ray cluster provisioning and operations so users can focus on their application code instead of infrastructure management.
 
 Example usage:
 ```
-> from cmlextras.ray_cluster import RayCluster
+> from cmlextensions.ray_cluster import RayCluster
 
 > cluster = RayCluster(num_workers=2)
 > cluster.init()
@@ -34,11 +34,11 @@ use the following Python code:
 ```
 
 ### Dask
-Dask is a flexible parallel computing library for analytics in Python. We can create a cluster on CML infrastructure to scale out Dask processes. This `cmlextras.dask_cluster` module abstracts the dask cluster provisioning and operations so users can focus on their application code instead of infrastructure management.
+Dask is a flexible parallel computing library for analytics in Python. We can create a cluster on CML infrastructure to scale out Dask processes. This `cmlextensions.dask_cluster` module abstracts the dask cluster provisioning and operations so users can focus on their application code instead of infrastructure management.
 
 Example usage:
 ```
-> from cmlextras.dask_cluster import DaskCluster
+> from cmlextensions.dask_cluster import DaskCluster
 
 > cluster = DaskCluster(num_workers=2)
 > cluster.init()
@@ -61,8 +61,8 @@ The cml (or legacy cdsw) library has a workers module already. The v2 module is 
 
 Example usage:
 ```
-> import cmlextras.workers_v2 as workers
-> from cmlextras.workers_v2 import WorkerGroup
+> import cmlextensions.workers_v2 as workers
+> from cmlextensions.workers_v2 import WorkerGroup
 
 > wg1 = WorkerGroup(1, code="import time;time.sleep(300)")
 > wg1.get_workers()
