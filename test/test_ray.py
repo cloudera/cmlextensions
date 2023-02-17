@@ -10,12 +10,12 @@
 # License for the specific permissions and limitations governing your
 # use of the file.
 
-# Add cmlextras to the path
+# Add cmlextensions to the path
 import sys
 sys.path.append('../src')
 
 import ray
-from cmlextras.ray_cluster import RayCluster
+from cmlextensions.ray_cluster import RayCluster
 
 c = RayCluster(num_workers=2, env={'OMP_NUM_THREADS':'2'})
 c.init()
