@@ -13,11 +13,11 @@
 ## Dependencies
 # !pip install dask[complete]
 
-# Add cmlextras to the path
+# Add cmlextensions to the path
 import sys
 sys.path.append('../src')
 
-from cmlextras.dask_cluster import DaskCluster
+from cmlextensions.dask_cluster import DaskCluster
 
 cluster = DaskCluster(num_workers=2)
 cluster.init()

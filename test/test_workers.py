@@ -10,8 +10,8 @@
 # License for the specific permissions and limitations governing your
 # use of the file.
 
-from cmlextras.workers_v2 import WorkerGroup
-import cmlextras.workers_v2 as workers
+from cmlextensions.workers_v2 import WorkerGroup
+import cmlextensions.workers_v2 as workers
 import time
 import sys
 sys.path.append('../src')
