@@ -49,7 +49,7 @@ class RayCluster():
                     stop_responses = cdsw.stop_workers(*[workload["id"] for workload in workload_details[status]])
                     stop_response_statuses = [response.status_code for response in stop_responses]
                     if(any([status >= 300 for status in stop_response_statuses])):
-                        print("Could not stop all Ray workloads. Trying not to force top all CML workers created in this session.")
+                        print("Could not stop all Ray workloads. Trying to force top all CML workers created in this session.")
                         cdsw.stop_workers()
 
     def _start_ray_workload(self, args, startup_timeout_seconds):
