@@ -112,20 +112,22 @@ class RayCluster():
             ) from error
 
         # Start the ray head process
+        print("Starting ray head...")
         startup_failed = False
         self._start_ray_head(startup_timeout_seconds = startup_timeout_seconds)
 
         if "failures" in self.ray_head_details and len(self.ray_head_details["failures"]) > 0:
-            print(f"Could not start up ray head.")
+            print(f"Could not start ray head. Started pod is in '{self.ray_head_details['failures'][0]['status']}' status. The expected status is 'running'")
             startup_failed = True
 
         else:
           ray_head_ip = self.ray_head_details['workers'][0]['ip_address']
           ray_head_addr = ray_head_ip + ':6379'
+          print(f"Starting {self.num_workers} ray workers...")
           self._add_ray_workers(ray_head_addr, startup_timeout_seconds = startup_timeout_seconds)
           if "failures" in self.ray_worker_details and  len(self.ray_worker_details["failures"]) > 0 :
               num_failed_workers = len(self.ray_worker_details["failures"]) 
-              print(f"Could not start up {num_failed_workers} out of {self.num_workers} requested ray workers.")
+              print(f"Could not start {num_failed_workers} out of {self.num_workers} requested ray workers.")
               startup_failed = True
 
         if startup_failed:
