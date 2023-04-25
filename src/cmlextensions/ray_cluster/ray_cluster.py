@@ -54,8 +54,18 @@ class RayCluster():
 
     def _start_ray_workload(self, args, startup_timeout_seconds):
         workloads =  cdsw.launch_workers(**args)
+        workloads_with_ids = [wl for wl in workloads if "id" in wl]
+        workloads_with_no_ids = [wl for wl in workloads if "id" not in wl]
+        no_id_messages = set([wl.get("message", "") for wl in workloads_with_no_ids])
+        if len(workloads_with_no_ids) > 0:
+            print("Could not create all requested workloads. Error messages received:" , no_id_messages)
+            # trying my best to clean up workloads
+            ids = [wl["id"] for wl in workloads_with_ids ] + [wl.get("engineId", "") for wl in workloads_with_no_ids]
+            ids = [id for id in ids if len(id) > 0]
+            cdsw.stop_workers(*ids)
+            return None
         workload_details =  cdsw.await_workers(
-          workloads,
+          workloads_with_ids,
           wait_for_completion=False,
           timeout_seconds=startup_timeout_seconds
         )
@@ -112,12 +122,13 @@ class RayCluster():
             ) from error
 
         # Start the ray head process
+        print("Initiating a new Ray Cluster. Do not forget to call .terminate() when you are done, to clean up the created CML workloads.\n")
         print("Starting ray head...")
         startup_failed = False
         self._start_ray_head(startup_timeout_seconds = startup_timeout_seconds)
 
-        if "failures" in self.ray_head_details and len(self.ray_head_details["failures"]) > 0:
-            print(f"Could not start ray head. Started pod is in '{self.ray_head_details['failures'][0]['status']}' status. The expected status is 'running'")
+        if len(self.ray_head_details.get("workers",[])) < 1:
+            print(f"Could not start ray head.")
             startup_failed = True
 
         else:
@@ -125,9 +136,8 @@ class RayCluster():
           ray_head_addr = ray_head_ip + ':6379'
           print(f"Starting {self.num_workers} ray workers...")
           self._add_ray_workers(ray_head_addr, startup_timeout_seconds = startup_timeout_seconds)
-          if "failures" in self.ray_worker_details and  len(self.ray_worker_details["failures"]) > 0 :
-              num_failed_workers = len(self.ray_worker_details["failures"]) 
-              print(f"Could not start {num_failed_workers} out of {self.num_workers} requested ray workers.")
+          if self.ray_worker_details is None or len(self.ray_worker_details.get("workers", [])) < self.num_workers:
+              print(f"Could not start {self.num_workers} requested ray workers.\n")
               startup_failed = True
 
         if startup_failed:
