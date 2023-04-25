@@ -11,14 +11,23 @@
 # use of the file.
 
 import os
-import cdsw
+import inspect
+
+# PBJ Runtimes do not have the cdsw library installed.
+# Instead, the cml library is added to workloads in recent CML releases.
+try:
+    import cml.utils_v1 as utils
+    cdsw = utils._emulate_cdsw()
+except ImportError:
+    import cdsw
+
 
 DEFAULT_DASHBOARD_PORT = os.environ['CDSW_APP_PORT']
 
 class RayCluster():
     """Ray Cluster built on CML Worker infrastructure"""
 
-    def __init__(self, num_workers, worker_cpu=2, worker_memory=4, worker_nvidia_gpu  = 0, head_cpu=2, head_memory=4, head_nvidia_gpu = 0,  dashboard_port=DEFAULT_DASHBOARD_PORT, env
+    def __init__(self, num_workers, worker_cpu=2, worker_memory=4, worker_nvidia_gpu=0, head_cpu=2, head_memory=4, head_nvidia_gpu=0,  dashboard_port=DEFAULT_DASHBOARD_PORT, env
 ={}):
         self.num_workers = num_workers
         self.worker_cpu = worker_cpu
@@ -37,7 +46,11 @@ class RayCluster():
         for workload_details in [self.ray_head_details, self.ray_worker_details]:
             for status in ["workers" , "failures"]:
                 if workload_details is not None and status in workload_details:
-                    cdsw.stop_workers(workload_details[status])
+                    stop_responses = cdsw.stop_workers(*[workload["id"] for workload in workload_details[status]])
+                    stop_response_statuses = [response.status_code for response in stop_responses]
+                    if(any([status >= 300 for status in stop_response_statuses])):
+                        print("Could not stop all Ray workloads. Trying not to force top all CML workers created in this session.")
+                        cdsw.stop_workers()
 
     def _start_ray_workload(self, args, startup_timeout_seconds):
         workloads =  cdsw.launch_workers(**args)
@@ -63,8 +76,7 @@ class RayCluster():
             'code': head_start_cmd,
             'env': self.env,
         }
-
-        if hasattr(cdsw.launch_workers, 'name'):
+        if "name" in inspect.signature(cdsw.launch_workers).parameters:
             args['name'] = 'Ray Head'
 
         self.ray_head_details = self._start_ray_workload(args, startup_timeout_seconds)
@@ -77,11 +89,12 @@ class RayCluster():
             'n': self.num_workers,
             'cpu': self.worker_cpu,
             'memory': self.worker_memory,
+            "nvidia_gpu" : self.worker_nvidia_gpu,
             'code': worker_start_cmd,
             'env': self.env,
         }
 
-        if hasattr(cdsw.launch_workers, 'name'):
+        if "name" in inspect.signature(cdsw.launch_workers).parameters:
             args['name'] = 'Ray Worker'
 
         self.ray_worker_details = self._start_ray_workload(args, startup_timeout_seconds)
@@ -111,12 +124,13 @@ class RayCluster():
           ray_head_addr = ray_head_ip + ':6379'
           self._add_ray_workers(ray_head_addr, startup_timeout_seconds = startup_timeout_seconds)
           if "failures" in self.ray_worker_details and  len(self.ray_worker_details["failures"]) > 0 :
-              print(f"Could not start up {len(self.ray_worker_details["failures"])} ray workers.")
-          startup_failed = True
+              num_failed_workers = len(self.ray_worker_details["failures"]) 
+              print(f"Could not start up {num_failed_workers} out of {self.num_workers} requested ray workers.")
+              startup_failed = True
 
         if startup_failed:
-          print("Cold not start some of they ray workloads. Ensure you have the resources in your CML cluster to provision the specified ray workloads and try again.")
-          print("Set a longer timeout period if your cluster needs time to scale.")
+          print("Could not start some of the ray workloads. Ensure ray is able to run in your environment and you have the resources in your CML workspace to provision the specified amount of ray workloads.")
+          print("Set a longer timeout period if your CML workspace needs time to scale.")
           print("Shutting down Ray cluster..")
           self.terminate()
           return
