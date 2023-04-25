@@ -18,21 +18,40 @@ DEFAULT_DASHBOARD_PORT = os.environ['CDSW_APP_PORT']
 class RayCluster():
     """Ray Cluster built on CML Worker infrastructure"""
 
-    def __init__(self, num_workers, worker_cpu=2, worker_memory=4, head_cpu=2, head_memory=4, dashboard_port=DEFAULT_DASHBOARD_PORT, env
+    def __init__(self, num_workers, worker_cpu=2, worker_memory=4, worker_nvidia_gpu  = 0, head_cpu=2, head_memory=4, head_nvidia_gpu = 0,  dashboard_port=DEFAULT_DASHBOARD_PORT, env
 ={}):
         self.num_workers = num_workers
         self.worker_cpu = worker_cpu
         self.worker_memory = worker_memory
+        self.worker_nvidia_gpu = worker_nvidia_gpu
         self.head_cpu = head_cpu
         self.head_memory = head_memory
+        self.head_nvidia_gpu = head_nvidia_gpu
         self.dashboard_port = dashboard_port
         self.env = env
 
         self.ray_head_details = None
         self.ray_worker_details = None
 
+    def _stop_ray_workloads(self):
+        for workload_details in [self.ray_head_details, self.ray_worker_details]:
+            for status in ["workers" , "failures"]:
+                if workload_details is not None and status in workload_details:
+                    cdsw.stop_workers(workload_details[status])
 
-    def _start_ray_head(self):
+    def _start_ray_workload(self, args, startup_timeout_seconds):
+        workloads =  cdsw.launch_workers(**args)
+        workload_details =  cdsw.await_workers(
+          workloads,
+          wait_for_completion=False,
+          timeout_seconds=startup_timeout_seconds
+        )
+        return workload_details
+                
+        
+
+
+    def _start_ray_head(self, startup_timeout_seconds):
         # We need to start the ray process with --block else the command completes and the CML Worker terminates
         head_start_cmd = f"!ray start --head --block --disable-usage-stats --num-cpus={self.head_cpu} --include-dashboard=true --dashboard-port={self.dashboard_port}"
 
@@ -40,6 +59,7 @@ class RayCluster():
             'n': 1,
             'cpu': self.head_cpu,
             'memory': self.head_memory,
+            "nvidia_gpu" : self.head_nvidia_gpu,
             'code': head_start_cmd,
             'env': self.env,
         }
@@ -47,15 +67,9 @@ class RayCluster():
         if hasattr(cdsw.launch_workers, 'name'):
             args['name'] = 'Ray Head'
 
-        ray_head = cdsw.launch_workers(**args)
+        self.ray_head_details = self._start_ray_workload(args, startup_timeout_seconds)
 
-        self.ray_head_details = cdsw.await_workers(
-          ray_head,
-          wait_for_completion=False,
-          timeout_seconds=90
-        )
-
-    def _add_ray_workers(self, head_addr):
+    def _add_ray_workers(self, head_addr, startup_timeout_seconds):
         # We need to start the ray process with --block else the command completes and the CML Worker terminates
         worker_start_cmd = f"!ray start --block --num-cpus={self.worker_cpu} --address={head_addr}"
 
@@ -70,13 +84,9 @@ class RayCluster():
         if hasattr(cdsw.launch_workers, 'name'):
             args['name'] = 'Ray Worker'
 
-        ray_workers = cdsw.launch_workers(**args)
+        self.ray_worker_details = self._start_ray_workload(args, startup_timeout_seconds)
 
-        self.ray_worker_details = cdsw.await_workers(
-            ray_workers,
-            wait_for_completion=False)
-
-    def init(self):
+    def init(self, startup_timeout_seconds = 90):
         """
         Creates a Ray Cluster on the CML Workers infrastructure.
         """
@@ -89,12 +99,27 @@ class RayCluster():
             ) from error
 
         # Start the ray head process
-        self._start_ray_head()
+        startup_failed = False
+        self._start_ray_head(startup_timeout_seconds = startup_timeout_seconds)
 
-        ray_head_ip = self.ray_head_details['workers'][0]['ip_address']
-        ray_head_addr = ray_head_ip + ':6379'
+        if "failures" in self.ray_head_details and len(self.ray_head_details["failures"]) > 0:
+            print(f"Could not start up ray head.")
+            startup_failed = True
 
-        self._add_ray_workers(ray_head_addr)
+        else:
+          ray_head_ip = self.ray_head_details['workers'][0]['ip_address']
+          ray_head_addr = ray_head_ip + ':6379'
+          self._add_ray_workers(ray_head_addr, startup_timeout_seconds = startup_timeout_seconds)
+          if "failures" in self.ray_worker_details and  len(self.ray_worker_details["failures"]) > 0 :
+              print(f"Could not start up {len(self.ray_worker_details["failures"])} ray workers.")
+          startup_failed = True
+
+        if startup_failed:
+          print("Cold not start some of they ray workloads. Ensure you have the resources in your CML cluster to provision the specified ray workloads and try again.")
+          print("Set a longer timeout period if your cluster needs time to scale.")
+          print("Shutting down Ray cluster..")
+          self.terminate()
+          return
 
         #TODO: could add cluster details, e.g., worker count and resources
         print(f"""
@@ -129,8 +154,7 @@ use the following Python code:
         Terminates the Ray Cluster.
         """
 
-        #TODO: stop workers only when they were created for this Ray Cluster
-        cdsw.stop_workers()
+        self._stop_ray_workloads()
 
         # Reset instance state
         self.ray_head_ip = None
