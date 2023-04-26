@@ -49,7 +49,7 @@ class RayCluster():
                     stop_responses = cdsw.stop_workers(*[workload["id"] for workload in workload_details[status]])
                     stop_response_statuses = [response.status_code for response in stop_responses]
                     if(any([status >= 300 for status in stop_response_statuses])):
-                        print("Could not stop all Ray workloads. Trying to force top all CML workers created in this session.")
+                        print("Could not stop all Ray workloads. Trying to force stop all CML workers created in this session.")
                         cdsw.stop_workers()
 
     def _start_ray_workload(self, args, startup_timeout_seconds):
@@ -59,7 +59,7 @@ class RayCluster():
         no_id_messages = set([wl.get("message", "") for wl in workloads_with_no_ids])
         if len(workloads_with_no_ids) > 0:
             print("Could not create all requested workloads. Error messages received:" , no_id_messages)
-            # trying my best to clean up workloads
+            # Clean up all workloads
             ids = [wl["id"] for wl in workloads_with_ids ] + [wl.get("engineId", "") for wl in workloads_with_no_ids]
             ids = [id for id in ids if len(id) > 0]
             cdsw.stop_workers(*ids)
@@ -122,7 +122,6 @@ class RayCluster():
             ) from error
 
         # Start the ray head process
-        print("Initiating a new Ray Cluster. Do not forget to call .terminate() when you are done, to clean up the created CML workloads.\n")
         print("Starting ray head...")
         startup_failed = False
         self._start_ray_head(startup_timeout_seconds = startup_timeout_seconds)
