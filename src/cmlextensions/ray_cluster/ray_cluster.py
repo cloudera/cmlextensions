@@ -76,7 +76,7 @@ class RayCluster():
 
     def _start_ray_head(self, startup_timeout_seconds):
         # We need to start the ray process with --block else the command completes and the CML Worker terminates
-        head_start_cmd = f"!ray start --head --block --disable-usage-stats --num-cpus={self.head_cpu} --include-dashboard=true --dashboard-port={self.dashboard_port}"
+        head_start_cmd = f"!ray start --head --block --disable-usage-stats --num-cpus={self.head_cpu} --num-gpus={self.head_nvidia_gpu} --include-dashboard=true --dashboard-port={self.dashboard_port}"
 
         args = {
             'n': 1,
@@ -93,7 +93,7 @@ class RayCluster():
 
     def _add_ray_workers(self, head_addr, startup_timeout_seconds):
         # We need to start the ray process with --block else the command completes and the CML Worker terminates
-        worker_start_cmd = f"!ray start --block --num-cpus={self.worker_cpu} --address={head_addr}"
+        worker_start_cmd = f"!ray start --block --num-cpus={self.worker_cpu} --num-gpus={self.worker_nvidia_gpu} --address={head_addr}"
 
         args = {
             'n': self.num_workers,
