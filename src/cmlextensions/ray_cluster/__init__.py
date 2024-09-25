@@ -13,8 +13,13 @@
 from .ray_cluster import *
 
 try:
+    import cml.utils_v1 as utils
+
+    cdsw = utils._emulate_cdsw()
+except ImportError:
     import cdsw
-except ImportError as error:
+
+if "cdsw" not in locals():
     raise ImportError(
         "Could not import cdsw, for this module to work you need to execute this code in a CML session"
     )
