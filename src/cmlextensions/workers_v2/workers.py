@@ -14,6 +14,8 @@ import cdsw
 import pandas as pd
 import uuid
 
+from cmlextensions.launch_workers_utils import add_rdma_launch_args
+
 pd.set_option('display.max_columns', None)
 
 def get_workers(active=False):
@@ -59,20 +61,40 @@ def _get_active_workers():
 class WorkerGroup():
     """New interface for the CML Worker infrastructure"""
 
-    def __init__(self, n, cpu=2, memory=4, nvidia_gpu=0, script="", code="", env={}, wait_for_running=False, wait_for_completion=False, timeout_seconds=90):
+    def __init__(
+        self,
+        n,
+        cpu=2,
+        memory=4,
+        nvidia_gpu=0,
+        script="",
+        code="",
+        env={},
+        wait_for_running=False,
+        wait_for_completion=False,
+        timeout_seconds=90,
+        rdma_network_selections=None,
+    ):
 
         self.id = str(uuid.uuid4())[:8]
         # env['group_id'] = self.id
 
-        workers = cdsw.launch_workers(
-            n=n,
-            cpu=cpu,
-            memory=memory,
-            nvidia_gpu=nvidia_gpu,
-            script=script,
-            code=code,
-            env=env,
+        launch_args = {
+            "n": n,
+            "cpu": cpu,
+            "memory": memory,
+            "nvidia_gpu": nvidia_gpu,
+            "script": script,
+            "code": code,
+            "env": env,
+        }
+        add_rdma_launch_args(
+            launch_args,
+            cdsw.launch_workers,
+            rdma_network_selections=rdma_network_selections,
         )
+
+        workers = cdsw.launch_workers(**launch_args)
 
         self.worker_ids = [
             worker["id"] for worker in workers

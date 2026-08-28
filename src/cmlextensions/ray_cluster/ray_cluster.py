@@ -13,6 +13,8 @@
 import os
 import inspect
 
+from cmlextensions.launch_workers_utils import add_rdma_launch_args
+
 # PBJ Runtimes do not have the cdsw library installed.
 # Instead, the cml library is added to workloads in recent CML releases.
 try:
@@ -27,8 +29,20 @@ DEFAULT_DASHBOARD_PORT = os.environ['CDSW_APP_PORT']
 class RayCluster():
     """Ray Cluster built on CML Worker infrastructure"""
 
-    def __init__(self, num_workers, worker_cpu=2, worker_memory=4, worker_nvidia_gpu=0, head_cpu=2, head_memory=4, head_nvidia_gpu=0,  dashboard_port=DEFAULT_DASHBOARD_PORT, env
-={}):
+    def __init__(
+        self,
+        num_workers,
+        worker_cpu=2,
+        worker_memory=4,
+        worker_nvidia_gpu=0,
+        head_cpu=2,
+        head_memory=4,
+        head_nvidia_gpu=0,
+        dashboard_port=DEFAULT_DASHBOARD_PORT,
+        env={},
+        head_rdma_network_selections=None,
+        worker_rdma_network_selections=None,
+    ):
         self.num_workers = num_workers
         self.worker_cpu = worker_cpu
         self.worker_memory = worker_memory
@@ -38,6 +52,8 @@ class RayCluster():
         self.head_nvidia_gpu = head_nvidia_gpu
         self.dashboard_port = dashboard_port
         self.env = env
+        self.head_rdma_network_selections = head_rdma_network_selections
+        self.worker_rdma_network_selections = worker_rdma_network_selections
 
         self.ray_head_details = None
         self.ray_worker_details = None
@@ -86,6 +102,11 @@ class RayCluster():
         }
         if "name" in inspect.signature(cdsw.launch_workers).parameters:
             args['name'] = 'Ray Head'
+        add_rdma_launch_args(
+            args,
+            cdsw.launch_workers,
+            rdma_network_selections=self.head_rdma_network_selections,
+        )
 
         self.ray_head_details = self._start_ray_workload(args, startup_timeout_seconds)
 
@@ -104,6 +125,11 @@ class RayCluster():
 
         if "name" in inspect.signature(cdsw.launch_workers).parameters:
             args['name'] = 'Ray Worker'
+        add_rdma_launch_args(
+            args,
+            cdsw.launch_workers,
+            rdma_network_selections=self.worker_rdma_network_selections,
+        )
 
         self.ray_worker_details = self._start_ray_workload(args, startup_timeout_seconds)
 

@@ -17,6 +17,8 @@ try:
 except ImportError:
     import cdsw
 
+from cmlextensions.launch_workers_utils import add_rdma_launch_args
+
 
 DEFAULT_DASHBOARD_PORT = os.environ["CDSW_APP_PORT"]
 
@@ -32,6 +34,7 @@ class DaskCluster:
         scheduler_memory=4,
         nvidia_gpu=0,
         dashboard_port=DEFAULT_DASHBOARD_PORT,
+        rdma_network_selections=None,
     ):
         self.num_workers = num_workers
         self.worker_cpu = worker_cpu
@@ -40,6 +43,7 @@ class DaskCluster:
         self.scheduler_memory = scheduler_memory
         self.dashboard_port = dashboard_port
         self.nvidia_gpu = nvidia_gpu
+        self.rdma_network_selections = rdma_network_selections
 
         self.dask_scheduler_details = None
         self.dask_worker_details = None
@@ -60,6 +64,12 @@ class DaskCluster:
 
         if args.get("nvidia_gpu") == 0:
             args.pop("nvidia_gpu", None)
+
+        add_rdma_launch_args(
+            args,
+            cdsw.launch_workers,
+            rdma_network_selections=self.rdma_network_selections,
+        )
 
         dask_scheduler = cdsw.launch_workers(**args)
 
@@ -83,6 +93,12 @@ class DaskCluster:
 
         if args.get("nvidia_gpu") == 0:
             args.pop("nvidia_gpu", None)
+
+        add_rdma_launch_args(
+            args,
+            cdsw.launch_workers,
+            rdma_network_selections=self.rdma_network_selections,
+        )
 
         dask_workers = cdsw.launch_workers(**args)
 
